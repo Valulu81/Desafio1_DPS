@@ -1,0 +1,43 @@
+.selector-salas button {
+  min-width: 100px;
+}
+
+.asientos-layout {
+  display: grid;
+  grid-template-columns: 40px auto;
+  gap: 10px;
+}
+
+.letras-col {
+  display: grid;
+  align-items: center;
+  justify-items: center;
+  color: #fff;
+  font-weight: bold;
+}
+
+
+.asientos-grid {
+  display: grid;
+  gap: 10px;
+  justify-content: center;
+}
+
+
+.asiento {
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.asiento.libre {
+  background-color: #007bff; 
+  color: #fff;
+}
+
+.asiento.ocupado {
+  background-color: #ffb700; 
+  color: #000;
+}
