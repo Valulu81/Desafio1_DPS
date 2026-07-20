@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import TablaPeliculas from "@/components/Peliculas/TablaPeliculas";
+import TablaPeliculas from "@/components/Peliculas/GestionPeliculas";
 import FormularioPelicula from "@/components/Peliculas/FormularioPelicula";
 import { Pelicula } from "@/types/pelicula";
 
