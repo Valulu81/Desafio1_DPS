@@ -10,7 +10,7 @@ export const salas: Salas[] = [
     {
         id: 2,
         nombre: "Sala 2",
-        filas: 8,
+        filas: 5,
         columnas: 10,
     },
     {
