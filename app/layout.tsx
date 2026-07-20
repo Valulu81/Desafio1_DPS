@@ -1,9 +1,12 @@
-import Providers from "./providers";
-import "./globals.css";
+import 'bootstrap/dist/css/bootstrap.min.css';
+import './globals.css';
+import Script from 'next/script';
+import Navbar from '@/components/navbar';
+import Providers from "./providers"
 
 export const metadata = {
-  title: "Sistema de Cine",
-  description: "Gestión de venta de entradas para cine",
+  title: 'Sistema de Cine',
+  description: 'Proyecto DPS',
 };
 
 export default function RootLayout({
@@ -15,8 +18,14 @@ export default function RootLayout({
     <html lang="es">
       <body>
         <Providers>
+          <Navbar />
           {children}
+          <Script
+            src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
+            strategy="afterInteractive"
+          />
         </Providers>
+
       </body>
     </html>
   );

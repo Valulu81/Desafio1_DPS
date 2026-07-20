@@ -6,7 +6,7 @@ import { Salas } from "@/types/sala";
 import { Asiento } from "@/types/asientos";
 
 export default function MapaAsientos() {
-  const [salaId, setSalaId] = useState<number>(salas[0].id);
+  const [salaId, setSalaId] = useState<string>(salas[0].id);
   const sala: Salas | undefined = salas.find((s) => s.id === salaId);
 
   if (!sala) return <p>Sala no encontrada</p>;

@@ -1,4 +1,4 @@
-export type EstadoAsiento = "libre" | "ocupado" | "seleccionado";
+export type EstadoAsiento = "libre" | "seleccionado" | "ocupado";
 
 export interface Asiento {
     id: string;
