@@ -42,7 +42,7 @@ export default function PeliculaFila({
 
       <td>{pelicula.clasificacion}</td>
 
-      <td>{pelicula.sala}</td>
+      <td>{pelicula.funciones.join(", ")}</td>
 
       <td>${pelicula.precio.toFixed(2)}</td>
 
