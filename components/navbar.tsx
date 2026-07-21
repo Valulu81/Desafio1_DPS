@@ -34,7 +34,7 @@ export default function Navbar() {
               </Link>
             </li>
             <li className="nav-item">
-              <Link className="nav-link" href="/config">
+              <Link className="nav-link" href="/asientos">
                 Configuración
               </Link>
             </li>

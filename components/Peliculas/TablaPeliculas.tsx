@@ -1,21 +1,18 @@
 "use client";
 
-import { useAppSelector } from "../../redux/hooks";
 import PeliculaFila from "./PeliculaFila";
 import { Pelicula } from "../../types/pelicula";
 import "../../styles/peliculas.css";
 
 interface TablaPeliculasProps {
+  peliculas: Pelicula[];
   onEdit: (pelicula: Pelicula) => void;
 }
 
 export default function TablaPeliculas({
+  peliculas,
   onEdit,
 }: TablaPeliculasProps) {
-
-  const peliculas = useAppSelector(
-    (state) => state.peliculas
-  );
 
   return (
     <div className="tabla-container">
@@ -41,7 +38,7 @@ export default function TablaPeliculas({
           {peliculas.length === 0 ? (
             <tr>
               <td colSpan={10} className="tabla-vacia">
-                No hay películas registradas
+                No se encontraron películas
               </td>
             </tr>
           ) : (

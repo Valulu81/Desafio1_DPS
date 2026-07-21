@@ -190,3 +190,76 @@
 .btn-editar:hover {
   transform: scale(1.2);
 }
+
+.filtros-container {
+  display: flex;
+  justify-content: center;
+
+  margin-bottom: 20px;
+}
+
+.filtro-select {
+  padding: 10px 15px;
+
+  border: 1px solid #ddd;
+  border-radius: 10px;
+
+  font-size: 0.95rem;
+
+  cursor: pointer;
+}
+
+.checkbox-disponibles {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+
+  justify-content: center;
+
+  margin: 0 auto 20px auto;
+
+  width: fit-content;
+
+  padding: 10px 18px;
+
+  background: white;
+
+  border: 1px solid #ddd;
+  border-radius: 20px;
+
+  font-size: 0.95rem;
+  color: #333;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  box-shadow:
+    0 2px 8px rgba(0,0,0,0.05);
+
+  transition: 0.3s;
+}
+
+.checkbox-disponibles:hover {
+  border-color: #22c55e;
+}
+
+.checkbox-disponibles input {
+  width: 18px;
+  height: 18px;
+
+  accent-color: #22c55e;
+
+  cursor: pointer;
+}
+
+.controles-fila {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  flex-wrap: wrap;
+
+  gap: 15px;
+
+  margin-bottom: 25px;
+}

@@ -6,7 +6,6 @@ import { addPelicula, editPelicula } from "../../redux/slices/peliculasSlice";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import "../../styles/modal.css";
 
-const SALAS = ["Sala 1", "Sala 2", "Sala 3", "Sala 4"];
 
 interface FormularioPeliculaProps {
   peliculaEditar: Pelicula | null;
@@ -43,9 +42,6 @@ export default function FormularioPelicula({
     peliculaEditar?.clasificacion ?? ""
   );
 
-  const [sala, setSala] = useState(
-    peliculaEditar?.sala ?? SALAS[0]
-  );
 
   const [precio, setPrecio] = useState(
     peliculaEditar?.precio ?? 0
@@ -111,7 +107,6 @@ export default function FormularioPelicula({
     genero,
     duracion,
     clasificacion,
-    sala,
     precio,
     estado: peliculaEditar?.estado ?? "Disponible" as const,
     imagen,
@@ -194,17 +189,6 @@ export default function FormularioPelicula({
             }
           />
 
-          <label>Sala</label>
-          <select
-            value={sala}
-            onChange={(e) => setSala(e.target.value)}
-          >
-            {SALAS.map((s) => (
-              <option key={s} value={s}>
-                {s}
-              </option>
-            ))}
-          </select>
 
           <label>Precio</label>
           <input

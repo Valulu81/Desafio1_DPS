@@ -1,9 +1,24 @@
 "use client";
 
+import Link from "next/link";
 import { useAppSelector } from "../../redux/hooks";
-import "../../styles/dashboard.css";
+import "@/styles/dashboard.css";
+import { useState } from "react";
+import { Pelicula } from "@/types/pelicula";
+import { funciones } from "@/data/funciones";
 
 export default function Dashboard() {
+
+  //  pal modal
+  const [peliculaSeleccionada, setPeliculaSeleccionada] = useState<Pelicula | null>(null);
+  const abrirModal = (pelicula: Pelicula) => {
+    setPeliculaSeleccionada(pelicula);
+  };
+  const cerrarModal = () => {
+    setPeliculaSeleccionada(null);
+  };
+
+
 
   const peliculas = useAppSelector(
     (state) => state.peliculas
@@ -11,19 +26,26 @@ export default function Dashboard() {
 
   const totalPeliculas = peliculas.length;
 
-  const totalDisponibles = peliculas.filter(
-    (p) => p.estado === "Disponible"
-  ).length;
+  // Pendiente: depende de salasSlice (funciones por sala)
+  const totalFunciones = 0;
 
   // Pendiente: depende de reservasSlice
   const totalBoletosVendidos = 0;
 
+  // Pendiente: depende de salasSlice (asientos por sala)
+  const totalAsientosDisponibles = 0;
+
+  // Pendiente: depende de salasSlice (asientos por sala)
+  const totalAsientosOcupados = 0;
+
   // Pendiente: depende de reservasSlice
   const ingresosGenerados = 0;
 
+  // Pendiente: depende de reservasSlice (conteo de reservas por película)
+  const peliculaMasReservada = "—";
+
   return (
     <div className="dashboard">
-      <p>Dashboard</p>
 
       <div className="dashboard-header">
         <h1>📊 Dashboard</h1>
@@ -33,33 +55,151 @@ export default function Dashboard() {
         </p>
       </div>
 
+      <div className="nueva-venta-container">
+        <Link href="/ventas" className="btn-nueva-venta">
+          + Nueva Venta
+        </Link>
+      </div>
+
+
       <div className="stats-grid">
 
         <div className="stat-card">
           <span>🎬</span>
-          <h3>Total Películas</h3>
+          <h3>Total películas</h3>
           <p>{totalPeliculas}</p>
         </div>
 
         <div className="stat-card">
-          <span>✅</span>
-          <h3>Disponibles</h3>
-          <p>{totalDisponibles}</p>
+          <span>🕒</span>
+          <h3>Total funciones</h3>
+          <p>{totalFunciones}</p>
         </div>
 
         <div className="stat-card">
           <span>🎟️</span>
-          <h3>Boletos Vendidos</h3>
+          <h3>Boletos vendidos hoy</h3>
           <p>{totalBoletosVendidos}</p>
         </div>
 
         <div className="stat-card">
+          <span>🟢</span>
+          <h3>Asientos disponibles</h3>
+          <p>{totalAsientosDisponibles}</p>
+        </div>
+
+        <div className="stat-card">
+          <span>🔴</span>
+          <h3>Asientos ocupados</h3>
+          <p>{totalAsientosOcupados}</p>
+        </div>
+
+        <div className="stat-card">
           <span>💰</span>
-          <h3>Ingresos Generados</h3>
+          <h3>Ingresos generados hoy</h3>
           <p>${ingresosGenerados}</p>
         </div>
 
+        <div className="stat-card">
+          <span>⭐</span>
+          <h3>Más reservada hoy</h3>
+          <p>{peliculaMasReservada}</p>
+        </div>
+
       </div>
+
+      <div className="lista-peliculas-section">
+        <h2>🎬 Catálogo de Películas</h2>
+
+        {peliculas.length === 0 ? (
+          <p className="lista-vacia">
+            No hay películas registradas.
+          </p>
+        ) : (
+          <div className="lista-peliculas">
+            {peliculas.map((pelicula) => (
+              <div
+                key={pelicula.id}
+                className="lista-pelicula-item"
+              >
+                {pelicula.imagen ? (
+                  <img
+                    src={pelicula.imagen}
+                    alt={pelicula.nombre}
+                    className="lista-poster"
+                  />
+                ) : (
+                  <div className="lista-poster-placeholder">
+                    🎬
+                  </div>
+                )}
+
+                <div className="lista-info">
+                  <h4>{pelicula.nombre}</h4>
+                  <p>{pelicula.genero} · {pelicula.duracion} min</p>
+
+                </div>
+
+                <span
+                  className={
+                    pelicula.estado === "Disponible"
+                      ? "estado-badge disponible"
+                      : "estado-badge no-disponible"
+                  }
+                >
+                  {pelicula.estado}
+                </span>
+                <button className="btn button btn-warning btn-rounded" onClick={() => abrirModal(pelicula)}>Ver funciones</button>
+
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+      {/* AQUI TA EL MODAL DE DETALLES */}
+      {peliculaSeleccionada && (
+        <div className="modal-overlay" onClick={cerrarModal}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <button className="modal-close" onClick={cerrarModal}>✖</button>
+
+            {/* Encabezado */}
+            <h2>{peliculaSeleccionada.nombre}</h2>
+            <p><strong>Género:</strong> {peliculaSeleccionada.genero}</p>
+            <p><strong>Duración:</strong> {peliculaSeleccionada.duracion} min</p>
+            <p><strong>Clasificacion:</strong> {peliculaSeleccionada.clasificacion}</p>
+            <p><strong>Precio:</strong> {peliculaSeleccionada.precio} min</p>
+            <p><strong>Descripción:</strong> {peliculaSeleccionada.descripcion} min</p>
+
+            {/* Tabla de funciones */}
+            <table className="tabla-funciones">
+              <thead>
+                <tr>
+                  <th>Funcion</th>
+                  <th>Hora</th>
+                </tr>
+              </thead>
+              <tbody>
+                {peliculaSeleccionada.funciones?.map((fid) => {
+                  // Buscar la función completa en el arreglo global "funciones"
+                  const funcion = funciones.find((f) => f.id === fid);
+                  if (!funcion) {
+                    return null;
+                  }
+                  return (
+                    <tr key={funcion.id}>
+                      <td>{funcion.id}</td>
+                      <td>{funcion.hora}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+
+            {/* Botón principal */}
+            <button className="btn-principal">Reservar Asiento</button>
+          </div>
+        </div>
+      )}
 
     </div>
   );
