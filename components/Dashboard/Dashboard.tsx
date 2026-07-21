@@ -6,6 +6,7 @@ import "@/styles/dashboard.css";
 import { useState } from "react";
 import { Pelicula } from "@/types/pelicula";
 import { funciones } from "@/data/funciones";
+import { salas } from "@/data/salas";
 
 export default function Dashboard() {
   const [peliculaSeleccionada, setPeliculaSeleccionada] = useState<Pelicula | null>(null);
@@ -23,9 +24,14 @@ export default function Dashboard() {
   const totalBoletosVendidos = reservas.reduce((acc, r) => acc + r.boletos, 0);
   const ingresosGenerados = reservas.reduce((acc, r) => acc + r.monto, 0);
 
-  // Asientos disponibles/ocupados (ejemplo simple: boletos vendidos = ocupados)
+  //calculo de asientos
   const totalAsientosOcupados = totalBoletosVendidos;
-  const totalAsientosDisponibles = 200 - totalAsientosOcupados; // ajusta según tu lógica real
+  const totalAsientos = salas.reduce(
+    (acc, sala) => acc + (sala.filas * sala.columnas),
+    0
+  ); 
+  const totalAsientosDisponibles = totalAsientos - totalAsientosOcupados;
+
 
   // Película más reservada
   const conteoPorPelicula: Record<string, number> = {};
