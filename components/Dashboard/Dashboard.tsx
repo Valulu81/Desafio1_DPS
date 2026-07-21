@@ -7,46 +7,48 @@ import { useState } from "react";
 import { Pelicula } from "@/types/pelicula";
 import { funciones } from "@/data/funciones";
 import { useRouter } from "next/navigation";
+import { salas } from "@/data/salas";
 
 export default function Dashboard() {
 
   //Para redirigir hacia asientos y que guarde el estado:
   const router = useRouter();
 
-  //  pal modal
+  
   const [peliculaSeleccionada, setPeliculaSeleccionada] = useState<Pelicula | null>(null);
-  const abrirModal = (pelicula: Pelicula) => {
-    setPeliculaSeleccionada(pelicula);
-  };
-  const cerrarModal = () => {
-    setPeliculaSeleccionada(null);
-  };
+  const abrirModal = (pelicula: Pelicula) => setPeliculaSeleccionada(pelicula);
+  const cerrarModal = () => setPeliculaSeleccionada(null);
 
+  // Estado global
+  const peliculas = useAppSelector((state) => state.peliculas);
+  const reservas = useAppSelector((state) => state.reservas.lista);
 
-
-  const peliculas = useAppSelector(
-    (state) => state.peliculas
-  );
-
+  // 📊 Métricas
   const totalPeliculas = peliculas.length;
+  const totalFunciones = funciones.length;
 
-  // Pendiente: depende de salasSlice (funciones por sala)
-  const totalFunciones = 0;
+  const totalBoletosVendidos = reservas.reduce((acc, r) => acc + r.boletos, 0);
+  const ingresosGenerados = reservas.reduce((acc, r) => acc + r.monto, 0);
 
-  // Pendiente: depende de reservasSlice
-  const totalBoletosVendidos = 0;
+  //calculo de asientos
+  const totalAsientosOcupados = totalBoletosVendidos;
+  const totalAsientos = salas.reduce(
+    (acc, sala) => acc + (sala.filas * sala.columnas),
+    0
+  );
+  const totalAsientosDisponibles = totalAsientos - totalAsientosOcupados;
 
-  // Pendiente: depende de salasSlice (asientos por sala)
-  const totalAsientosDisponibles = 0;
 
-  // Pendiente: depende de salasSlice (asientos por sala)
-  const totalAsientosOcupados = 0;
+  // Película más reservada
+  const conteoPorPelicula: Record<string, number> = {};
+  reservas.forEach((r) => {
+    conteoPorPelicula[r.pelicula] = (conteoPorPelicula[r.pelicula] || 0) + r.boletos;
+  });
+  const peliculaMasReservada =
+    Object.keys(conteoPorPelicula).length > 0
+      ? Object.entries(conteoPorPelicula).sort((a, b) => b[1] - a[1])[0][0]
+      : "—";
 
-  // Pendiente: depende de reservasSlice
-  const ingresosGenerados = 0;
-
-  // Pendiente: depende de reservasSlice (conteo de reservas por película)
-  const peliculaMasReservada = "—";
 
   return (
     <div className="dashboard">
@@ -169,22 +171,22 @@ export default function Dashboard() {
             {/* Encabezado */}
             <h2>{peliculaSeleccionada.nombre}</h2>
             <div className="modal-info-fila">
-                <div className="modal-datos">
-                  <p><strong>Género:</strong> {peliculaSeleccionada.genero}</p>
-                    <p><strong>Duración:</strong> {peliculaSeleccionada.duracion} min</p>
-                    <p><strong>Clasificación:</strong> {peliculaSeleccionada.clasificacion}</p>
-                    <p><strong>Precio:</strong> ${peliculaSeleccionada.precio}</p>
-                    <p><strong>Descripción:</strong> {peliculaSeleccionada.descripcion}</p>
-                </div>
-                {peliculaSeleccionada.imagen ? (
-                  <img
+              <div className="modal-datos">
+                <p><strong>Género:</strong> {peliculaSeleccionada.genero}</p>
+                <p><strong>Duración:</strong> {peliculaSeleccionada.duracion} min</p>
+                <p><strong>Clasificación:</strong> {peliculaSeleccionada.clasificacion}</p>
+                <p><strong>Precio:</strong> ${peliculaSeleccionada.precio}</p>
+                <p><strong>Descripción:</strong> {peliculaSeleccionada.descripcion}</p>
+              </div>
+              {peliculaSeleccionada.imagen ? (
+                <img
                   src={peliculaSeleccionada.imagen}
                   alt={peliculaSeleccionada.nombre}
                   className="modal-poster"
-                  />
-                ) : (<div className="modal-poster-placeholder">🎬
-                      </div>)
-                }
+                />
+              ) : (<div className="modal-poster-placeholder">🎬
+              </div>)
+              }
             </div>
 
             {/* Tabla de funciones */}
@@ -214,9 +216,9 @@ export default function Dashboard() {
 
             {/* Botón principal de envío con el id*/}
             <button
-            className="btn-principal"
-            onClick={() => router.push(`/asientos?peliculaId=${peliculaSeleccionada.id}`)
-            }>Reservar Asiento</button>
+              className="btn-principal"
+              onClick={() => router.push(`/asientos?peliculaId=${peliculaSeleccionada.id}`)
+              }>Reservar Asiento</button>
 
           </div>
         </div>
