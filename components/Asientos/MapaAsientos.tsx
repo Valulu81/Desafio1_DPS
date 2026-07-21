@@ -7,7 +7,7 @@ import { Asiento } from "@/types/asientos";
 import { useAppSelector, useAppDispatch } from "@/redux/hooks";
 import { funciones as funcionesData } from "@/data/funciones";
 import { agregarReserva } from "@/redux/slices/reservasSlice";
-import { actualizarAsientos, setFunciones } from "@/redux/slices/funcionesSlice";
+import { guardarAsientosFuncion, setFunciones } from "@/redux/slices/funcionesSlice";
 
 interface MapaAsientosProps {
   peliculaId?: string | null;
@@ -15,8 +15,6 @@ interface MapaAsientosProps {
 
 export default function MapaAsientos({ peliculaId }: MapaAsientosProps) {
   const dispatch = useAppDispatch();
-  
-  // 1. Obtenemos las funciones y películas desde el store de Redux
   const funcionesRedux = useAppSelector((state) => state.funciones);
   const peliculas = useAppSelector((state) => state.peliculas);
 
@@ -24,12 +22,11 @@ export default function MapaAsientos({ peliculaId }: MapaAsientosProps) {
   const [clienteEmail, setClienteEmail] = useState("");
   const [clienteTelefono, setClienteTelefono] = useState("");
   
-  // Guardamos únicamente el ID de la función seleccionada para evitar desfasajes con Redux
   const [funcionIdSeleccionada, setFuncionIdSeleccionada] = useState<string | null>(null);
   const [salaId, setSalaId] = useState<string>(salas[0]?.id ?? "");
   const [asientos, setAsientos] = useState<Asiento[]>([]);
 
-  // 2. Solo inicializar funciones en Redux SI AÚN NO EXISTEN (evita sobreescribir compras anteriores)
+  // 1. Inicializar funciones en Redux si no existen
   useEffect(() => {
     if (!funcionesRedux || funcionesRedux.length === 0) {
       dispatch(setFunciones(funcionesData));
@@ -38,28 +35,24 @@ export default function MapaAsientos({ peliculaId }: MapaAsientosProps) {
 
   const pelicula = peliculas.find((p) => p.id === Number(peliculaId));
   const sala: Salas | undefined = salas.find((s) => s.id === salaId);
-
-  // Obtener la función actual directamente desde Redux
   const funcionActual = funcionesRedux.find((f) => f.id === funcionIdSeleccionada);
 
-  // 3. Sincronización inteligente de asientos
+  // 2. Sincronización y generación de asientos
   useEffect(() => {
-    if (!sala) return;
+    if (!sala || !funcionIdSeleccionada) return;
 
-    // Generamos la plantilla de filas según la sala
-    const filas = Array.from({ length: sala.filas }, (_, i) =>
-      String.fromCharCode(65 + i)
-    );
-
-    // CASO A: Si hay una función seleccionada y ya tiene asientos en Redux
+    // Si la función en Redux YA tiene asientos guardados (libres u ocupados), los cargamos
     if (funcionActual && funcionActual.asientos && funcionActual.asientos.length > 0) {
       setAsientos(funcionActual.asientos);
       return;
     }
 
-    // CASO B: Si la función no tiene asientos o no hay función seleccionada todavía,
-    // generamos la matriz base de asientos libres.
-    const nuevosAsientos: Asiento[] = filas.flatMap((fila) =>
+    // Si es la PRIMERA VEZ que se abre esta función, generamos los asientos libres
+    const filas = Array.from({ length: sala.filas }, (_, i) =>
+      String.fromCharCode(65 + i)
+    );
+
+    const asientosIniciales: Asiento[] = filas.flatMap((fila) =>
       Array.from({ length: sala.columnas }).map((_, j) => ({
         id: `${fila}${j + 1}`,
         fila,
@@ -68,8 +61,15 @@ export default function MapaAsientos({ peliculaId }: MapaAsientosProps) {
       }))
     );
 
-    setAsientos(nuevosAsientos);
-  }, [funcionIdSeleccionada, funcionActual, sala]);
+    // Guardamos la matriz recién generada tanto en el estado local como en Redux
+    setAsientos(asientosIniciales);
+    dispatch(
+      guardarAsientosFuncion({
+        funcionId: funcionIdSeleccionada,
+        asientos: asientosIniciales,
+      })
+    );
+  }, [funcionIdSeleccionada, sala]);
 
   if (!sala) return <p className="text-center p-4">Sala no encontrada</p>;
 
@@ -80,9 +80,7 @@ export default function MapaAsientos({ peliculaId }: MapaAsientosProps) {
   const toggleSeleccion = (id: string) => {
     setAsientos((prev) =>
       prev.map((a) => {
-        if (a.id !== id) return a;
-        if (a.estado === "ocupado") return a; // No permitir cambiar si ya está ocupado
-
+        if (a.id !== id || a.estado === "ocupado") return a;
         return {
           ...a,
           estado: a.estado === "libre" ? "seleccionado" : "libre",
@@ -92,7 +90,7 @@ export default function MapaAsientos({ peliculaId }: MapaAsientosProps) {
   };
 
   const confirmarReserva = () => {
-    if (!funcionActual) {
+    if (!funcionActual || !funcionIdSeleccionada) {
       alert("Por favor selecciona un horario para la función.");
       return;
     }
@@ -103,46 +101,46 @@ export default function MapaAsientos({ peliculaId }: MapaAsientosProps) {
       return;
     }
 
-    const boletos = seleccionados.length;
-    const monto = boletos * (pelicula?.precio ?? 0);
-    const idsOcupados = seleccionados.map((a) => a.id);
+    // Creamos la lista de asientos con el estado "ocupado" actualizado
+    const asientosActualizados: Asiento[] = asientos.map((a) =>
+      a.estado === "seleccionado" ? { ...a, estado: "ocupado" as const } : a
+    );
 
-    // 1. Guardar la nueva reserva en el slice de reservas
+    // 1. Guardar la reserva en Redux
     const nuevaReserva = {
       id: `r${Date.now()}`,
       nombre: clienteNombre,
       email: clienteEmail,
       pelicula: pelicula?.nombre ?? "",
       hora: funcionActual.hora,
-      boletos,
-      monto,
+      boletos: seleccionados.length,
+      monto: seleccionados.length * (pelicula?.precio ?? 0),
       sala: sala?.nombre ?? "",
     };
 
     dispatch(agregarReserva(nuevaReserva));
 
-    // 2. Persistir el estado 'ocupado' en el slice de funciones de Redux
+    // 2. 🔑 Persistir la lista COMPLETA de asientos en Redux
     dispatch(
-      actualizarAsientos({
-        funcionId: funcionActual.id,
-        asientosOcupados: idsOcupados,
+      guardarAsientosFuncion({
+        funcionId: funcionIdSeleccionada,
+        asientos: asientosActualizados,
       })
     );
 
-    // 3. Actualizar el estado visual local
-    setAsientos((prev) =>
-      prev.map((a) =>
-        idsOcupados.includes(a.id) ? { ...a, estado: "ocupado" } : a
-      )
-    );
+    // 3. Actualizar la vista local
+    setAsientos(asientosActualizados);
 
+    // Limpiar formulario opcional
+    setClienteNombre("");
+    setClienteEmail("");
+    setClienteTelefono("");
     alert("¡Reserva confirmada con éxito!");
   };
 
   const totalLibres = asientos.filter((a) => a.estado === "libre").length;
   const totalOcupados = asientos.filter((a) => a.estado === "ocupado").length;
-  
-  // Filtramos las funciones que le corresponden a esta película
+
   const funcionesPelicula = funcionesRedux.filter((f) =>
     pelicula?.funciones?.includes(f.id)
   );
@@ -155,7 +153,7 @@ export default function MapaAsientos({ peliculaId }: MapaAsientosProps) {
         </p>
       )}
 
-      {/* Selector de funciones / horarios */}
+      {/* Selector de funciones */}
       <div className="selector-salas mb-3 text-center">
         {funcionesPelicula.map((f) => {
           const salaFuncion = salas.find((s) => s.id === f.salaId);
@@ -167,7 +165,7 @@ export default function MapaAsientos({ peliculaId }: MapaAsientosProps) {
               }`}
               onClick={() => {
                 setSalaId(f.salaId);
-                setFuncionIdSeleccionada(f.id); // Guardamos solo la ID
+                setFuncionIdSeleccionada(f.id);
               }}
             >
               {salaFuncion?.nombre} - {f.hora}
@@ -177,7 +175,7 @@ export default function MapaAsientos({ peliculaId }: MapaAsientosProps) {
       </div>
 
       <div className="row justify-content-center align-items-start">
-        {/* Mapa de Asientos */}
+        {/* Mapa de asientos */}
         <div className="col-md-8 d-flex flex-column align-items-center contyenedor-asientos">
           <h3 className="text-center mb-3">{sala.nombre}</h3>
           <button className="btn btn-primary mb-3" style={{ backgroundColor: "#9810FA" }}>
@@ -234,7 +232,7 @@ export default function MapaAsientos({ peliculaId }: MapaAsientosProps) {
           </div>
         </div>
 
-        {/* Resumen Lateral */}
+        {/* Resumen lateral */}
         <div className="col-lg-3 col-md-5 cartita">
           <div>
             <p>{totalLibres} Asientos disponibles</p>

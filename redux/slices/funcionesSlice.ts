@@ -1,40 +1,28 @@
+// redux/slices/funcionesSlice.ts
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { Funcion } from "@/types/funcion";
-
-interface UpdateAsientosPayload {
-    funcionId: string;
-    asientosOcupados: string[];
-}
-
-interface FuncionesState {
-    lista: Funcion[];
-}
-const initialState: Funcion[] = [];
+import { Asiento } from "@/types/asientos";
 
 const funcionesSlice = createSlice({
     name: "funciones",
-    initialState,
+    initialState: [] as Funcion[], // O { lista: [] } según tu estructura
     reducers: {
         setFunciones: (state, action: PayloadAction<Funcion[]>) => {
             return action.payload;
         },
-        actualizarAsientos: (
+        // 🔑 GUARDAR TODO EL MATRIZ DE ASIENTOS CON SUS ESTADOS
+        guardarAsientosFuncion: (
             state,
-            action: PayloadAction<{ funcionId: string; asientosOcupados: string[] }>
+            action: PayloadAction<{ funcionId: string; asientos: Asiento[] }>
         ) => {
-            const { funcionId, asientosOcupados } = action.payload;
-            const funcion = state.find((f) => f.id === funcionId); 
-
+            const { funcionId, asientos } = action.payload;
+            const funcion = state.find((f) => f.id === funcionId);
             if (funcion) {
-                funcion.asientos = funcion.asientos.map((asiento) =>
-                    asientosOcupados.includes(asiento.id)
-                        ? { ...asiento, estado: "ocupado" }
-                        : asiento
-                );
+                funcion.asientos = asientos; // Sobrescribe con los asientos actualizados
             }
-        }
+        },
     },
 });
 
-export const { setFunciones, actualizarAsientos } = funcionesSlice.actions;
+export const { setFunciones, guardarAsientosFuncion } = funcionesSlice.actions;
 export default funcionesSlice.reducer;
