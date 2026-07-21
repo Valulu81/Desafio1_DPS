@@ -3,6 +3,8 @@
 import { Pelicula } from "../../types/pelicula";
 import { deletePelicula, toggleEstado } from "../../redux/slices/peliculasSlice";
 import { useAppDispatch } from "../../redux/hooks";
+import { funciones } from "@/data/funciones";
+import { salas } from "@/data/salas";
 
 interface PeliculaFilaProps {
   pelicula: Pelicula;
@@ -14,6 +16,16 @@ export default function PeliculaFila({
   onEdit,
 }: PeliculaFilaProps) {
   const dispatch = useAppDispatch();
+
+  const salasDeEstaPelicula = (pelicula.funciones ?? [])
+    .map((fid) => {
+      const funcion = funciones.find((f) => f.id === fid);
+      const sala = salas.find((s) => s.id === funcion?.salaId);
+      return sala?.nombre;
+    })
+    .filter((nombre): nombre is string => Boolean(nombre));
+
+  const salasUnicas = Array.from(new Set(salasDeEstaPelicula));
 
   return (
     <tr className="pelicula-fila">
@@ -42,7 +54,11 @@ export default function PeliculaFila({
 
       <td>{pelicula.clasificacion}</td>
 
-      <td>{pelicula.funciones?.join(", ") ?? ""}</td>
+      <td>
+        {salasUnicas.length > 0
+          ? salasUnicas.join(", ")
+          : "Sin funciones"}
+      </td>
 
       <td>${pelicula.precio.toFixed(2)}</td>
 
@@ -69,21 +85,22 @@ export default function PeliculaFila({
           ✏️
         </button>
 
-        <button className="btn-eliminar"
-        onClick={() => {
-              const confirmar = window.confirm(
-                `¿Seguro que deseas eliminar "${pelicula.nombre}"? Esta acción no se puede deshacer.`
-                );
-                
-                if (confirmar) {
-                  dispatch(deletePelicula(pelicula.id));
-                }
-  }}
->
-  🗑️
-</button>
+        <button
+          className="btn-eliminar"
+          onClick={() => {
+            const confirmar = window.confirm(
+              `¿Seguro que deseas eliminar "${pelicula.nombre}"? Esta acción no se puede deshacer.`
+            );
+
+            if (confirmar) {
+              dispatch(deletePelicula(pelicula.id));
+            }
+          }}
+        >
+          🗑️
+        </button>
       </td>
 
     </tr>
   );
-} 
+}

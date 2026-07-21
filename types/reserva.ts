@@ -1,8 +1,8 @@
-export interface Reserva {
+export interface Reservas {
     id: string;
-    nombre : string;
+    nombre: string;
     email: string;
-    pelicula : string;
+    pelicula: string;
     hora: string;
     boletos: number;
     monto: number;

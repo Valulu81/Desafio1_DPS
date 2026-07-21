@@ -4,9 +4,10 @@ import { useState } from "react";
 import { Pelicula } from "../../types/pelicula";
 import { addPelicula, editPelicula } from "../../redux/slices/peliculasSlice";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
+import { funciones } from "@/data/funciones";
+import { salas } from "@/data/salas";
 import "../../styles/modal.css";
 
-const SALAS = ["Sala 1", "Sala 2", "Sala 3", "Sala 4"];
 
 interface FormularioPeliculaProps {
   peliculaEditar: Pelicula | null;
@@ -36,15 +37,11 @@ export default function FormularioPelicula({
   );
 
   const [duracion, setDuracion] = useState<number | "">(
-  peliculaEditar?.duracion ?? ""
-);
+    peliculaEditar?.duracion ?? ""
+  );
 
   const [clasificacion, setClasificacion] = useState(
     peliculaEditar?.clasificacion ?? ""
-  );
-
-  const [funcion, setFuncion] = useState<string[]>(
-    peliculaEditar?.funciones ?? []
   );
 
   const [precio, setPrecio] = useState(
@@ -59,75 +56,87 @@ export default function FormularioPelicula({
     peliculaEditar?.descripcion ?? ""
   );
 
+  const salaInicial = (() => {
+    const primeraFuncionId = peliculaEditar?.funciones?.[0];
+    const funcion = funciones.find((f) => f.id === primeraFuncionId);
+    return funcion?.salaId ?? "";
+  })();
+
+  const [salaSeleccionada, setSalaSeleccionada] = useState(salaInicial);
+
   const [error, setError] = useState("");
 
   const handleGuardar = () => {
-  if (nombre.trim() === "") {
-    setError("El nombre no puede estar vacío.");
-    return;
-  }
+    if (nombre.trim() === "") {
+      setError("El nombre no puede estar vacío.");
+      return;
+    }
 
-  if (codigo.trim() === "") {
-    setError("El código no puede estar vacío.");
-    return;
-  }
+    if (codigo.trim() === "") {
+      setError("El código no puede estar vacío.");
+      return;
+    }
 
-  if (genero.trim() === "") {
-    setError("El género no puede estar vacío.");
-    return;
-  }
+    if (genero.trim() === "") {
+      setError("El género no puede estar vacío.");
+      return;
+    }
 
-  if (clasificacion.trim() === "") {
-    setError("La clasificación no puede estar vacía.");
-    return;
-  }
+    if (clasificacion.trim() === "") {
+      setError("La clasificación no puede estar vacía.");
+      return;
+    }
 
-  if (duracion === "" || duracion <= 0) {
-  setError("La duración debe ser mayor a 0.");
-  return;
-}
+    if (duracion === "" || duracion <= 0) {
+      setError("La duración debe ser mayor a 0.");
+      return;
+    }
 
-  if (precio < 0) {
-    setError("El precio no puede ser negativo.");
-    return;
-  }
+    if (precio < 0) {
+      setError("El precio no puede ser negativo.");
+      return;
+    }
 
-  const codigoRepetido = peliculas.some(
-    (p) =>
-      p.codigo === codigo &&
-      p.id !== peliculaEditar?.id
-  );
-
-  if (codigoRepetido) {
-    setError("Ya existe una película con ese código.");
-    return;
-  }
-
-  setError("");
-
-  const datos = {
-    codigo,
-    nombre,
-    genero,
-    duracion,
-    clasificacion,
-    funcion,
-    precio,
-    estado: peliculaEditar?.estado ?? "Disponible" as const,
-    imagen,
-    descripcion,
-  };
-
-  if (peliculaEditar) {
-    dispatch(
-      editPelicula({ id: peliculaEditar.id, ...datos })
+    const codigoRepetido = peliculas.some(
+      (p) =>
+        p.codigo === codigo &&
+        p.id !== peliculaEditar?.id
     );
-  } else {
-    dispatch(addPelicula(datos));
-  }
 
-  onClose();
-};
+    if (codigoRepetido) {
+      setError("Ya existe una película con ese código.");
+      return;
+    }
+
+    setError("");
+
+    const funcionesDeLaSala = funciones
+      .filter((f) => f.salaId === salaSeleccionada)
+      .map((f) => f.id);
+
+    const datos = {
+      codigo,
+      nombre,
+      genero,
+      duracion,
+      clasificacion,
+      precio,
+      estado: peliculaEditar?.estado ?? "Disponible" as const,
+      imagen,
+      descripcion,
+      funciones: funcionesDeLaSala,
+    };
+
+    if (peliculaEditar) {
+      dispatch(
+        editPelicula({ id: peliculaEditar.id, ...datos })
+      );
+    } else {
+      dispatch(addPelicula(datos));
+    }
+
+    onClose();
+  };
 
   return (
     <div className="modal-overlay">
@@ -181,7 +190,9 @@ export default function FormularioPelicula({
             type="number"
             value={duracion}
             onChange={(e) =>
-              setDuracion(Number(e.target.value))
+              setDuracion(
+                e.target.value === "" ? "" : Number(e.target.value)
+              )
             }
           />
 
@@ -196,12 +207,14 @@ export default function FormularioPelicula({
 
           <label>Sala</label>
           <select
-            value={funcion[0] ?? ""}
-            onChange={(e) => setFuncion([e.target.value])}
+            value={salaSeleccionada}
+            onChange={(e) => setSalaSeleccionada(e.target.value)}
           >
-            {SALAS.map((s) => (
-              <option key={s} value={s}>
-                {s}
+            <option value="">Seleccionar sala</option>
+
+            {salas.map((sala) => (
+              <option key={sala.id} value={sala.id}>
+                {sala.nombre}
               </option>
             ))}
           </select>

@@ -4,8 +4,20 @@ import { useState, useEffect } from "react";
 import { salas } from "@/data/salas";
 import { Salas } from "@/types/sala";
 import { Asiento } from "@/types/asientos";
+import { useAppSelector } from "@/redux/hooks";
 
-export default function MapaAsientos() {
+//Interface para recoger el id del modal
+interface MapaAsientosProps {
+  peliculaId?: string | null;
+}
+
+export default function MapaAsientos({ peliculaId }: MapaAsientosProps) {
+  
+  const peliculas = useAppSelector((state) => state.peliculas);
+  const pelicula = peliculas.find(
+    (p) => p.id === Number(peliculaId)
+  );
+
   const [salaId, setSalaId] = useState<string>(salas[0].id);
   const sala: Salas | undefined = salas.find((s) => s.id === salaId);
 
@@ -61,6 +73,14 @@ export default function MapaAsientos() {
 
   return (
     <div className="container-fluid text-light p-4 salas-container">
+
+      {/*Para mostrar el nombre de la peli*/}
+      {peliculaId && (
+        <p className="text-center mb-3">
+          <strong className="nombre-pelicula-reserva">{pelicula?.nombre}</strong>
+        </p>
+      )}
+
       {/* aqui estan los botones de salas */}
       <div className="selector-salas mb-3 text-center">
         {salas.map((s) => (
@@ -142,8 +162,8 @@ export default function MapaAsientos() {
           <div className="card text-light p-3 w-100 ">
             <h5 className="mb-3">Resumen de seleccion</h5>
             <p>Asientos seleccionados: <strong>{asientos.filter((a) => a.estado === "seleccionado").length}</strong></p>
-            <p>Precio por boleto: <strong>$100 MXN</strong></p>
-            <p>Total a pagar: <strong>${asientos.filter((a) => a.estado === "seleccionado").length * 100} MXN</strong></p>
+            <p>Precio por boleto: <strong>$100</strong></p>
+            <p>Total a pagar: <strong>${asientos.filter((a) => a.estado === "seleccionado").length * 100}</strong></p>
             <hr></hr>
             <div className="mx-5 mb-3">
               <p>Ingresar Datos de cliente</p>

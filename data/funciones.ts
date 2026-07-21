@@ -22,7 +22,7 @@ export const funciones = [
     },
     {
         id: "f4",
-        peliculasId: "p2",
+        peliculaId: "p2",
         hora: "14:00",
         salaId: "s2",
         asientos: []
@@ -43,14 +43,14 @@ export const funciones = [
     },
     {
         id: "f7",
-        peliculasId: "p4",
+        peliculaId: "p4",
         hora: "11:00",
         salaId: "s2",
         asientos: []
     },
     {
         id: "f8",
-        peliculasId: "p4",
+        peliculaId: "p4",
         hora: "15:00",
         salaId: "s3",
         asientos: []

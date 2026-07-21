@@ -7,13 +7,33 @@ import Buscador from "@/components/Peliculas/Buscador";
 import Filtros from "@/components/Peliculas/Filtros";
 import { Pelicula } from "@/types/pelicula";
 import { useAppSelector } from "@/redux/hooks";
+import { funciones } from "@/data/funciones";
+import { salas } from "@/data/salas";
 
 export default function PeliculasPage() {
 
-  const peliculas = useAppSelector(
+  const obtenerSalasDePelicula = (funcionesIds?: string[]) => {
+  const nombres = (funcionesIds ?? [])
+    .map((fid) => {
+      const funcion = funciones.find((f) => f.id === fid);
+      const sala = salas.find((s) => s.id === funcion?.salaId);
+      return sala?.nombre;
+    })
+    .filter((nombre): nombre is string => Boolean(nombre));
+
+  return Array.from(new Set(nombres));
+};
+const peliculas = useAppSelector(
     (state) => state.peliculas
   );
 
+const salasDisponibles = Array.from(
+  new Set(
+    peliculas.flatMap((p) => obtenerSalasDePelicula(p.funciones))
+  )
+);
+
+  
   const [modalAbierto, setModalAbierto] = useState(false);
 
   const [peliculaEditar, setPeliculaEditar] =
@@ -56,9 +76,6 @@ export default function PeliculasPage() {
     new Set(peliculas.map((p) => p.clasificacion))
   );
 
-  const salasDisponibles = Array.from(
-    new Set(peliculas.map((p) => p.sala))
-  );
 
   const peliculasFiltradas = peliculas.filter((p) => {
 
@@ -74,9 +91,16 @@ export default function PeliculasPage() {
       clasificacionSeleccionada === "" ||
       p.clasificacion === clasificacionSeleccionada;
 
+
+
+      
+
     const coincideSala =
       salaSeleccionada === "" ||
-      p.sala === salaSeleccionada;
+        obtenerSalasDePelicula(p.funciones).includes(salaSeleccionada);
+
+
+
 
     const coincideDisponibilidad =
       !soloDisponibles || p.estado === "Disponible";

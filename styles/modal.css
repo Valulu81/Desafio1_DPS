@@ -105,3 +105,53 @@
 .modal-guardar:hover {
   background: #006f94;
 }
+
+/* Para la imagen de la peli en el modal*/
+.modal-info-fila {
+  display: flex;
+  gap: 20px;
+
+  align-items: center;
+
+  margin-bottom: 15px;
+}
+
+.modal-datos {
+  flex: 1;
+}
+
+.modal-datos p {
+  margin: 8px 0;
+}
+
+.modal-poster {
+  width: 140px;
+  height: 200px;
+
+  object-fit: cover;
+
+  border-radius: 10px;
+
+  border: 1px solid #e5e7eb;
+
+  flex-shrink: 0;
+}
+
+.modal-poster-placeholder {
+  width: 140px;
+  height: 200px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: #f1f5f9;
+
+  border-radius: 10px;
+
+  border: 1px solid #e5e7eb;
+
+  font-size: 2.5rem;
+
+  flex-shrink: 0;
+}

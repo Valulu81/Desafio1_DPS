@@ -6,9 +6,15 @@ import "@/styles/dashboard.css";
 import { useState } from "react";
 import { Pelicula } from "@/types/pelicula";
 import { funciones } from "@/data/funciones";
+import { useRouter } from "next/navigation";
 import { salas } from "@/data/salas";
 
 export default function Dashboard() {
+
+  //Para redirigir hacia asientos y que guarde el estado:
+  const router = useRouter();
+
+  
   const [peliculaSeleccionada, setPeliculaSeleccionada] = useState<Pelicula | null>(null);
   const abrirModal = (pelicula: Pelicula) => setPeliculaSeleccionada(pelicula);
   const cerrarModal = () => setPeliculaSeleccionada(null);
@@ -29,7 +35,7 @@ export default function Dashboard() {
   const totalAsientos = salas.reduce(
     (acc, sala) => acc + (sala.filas * sala.columnas),
     0
-  ); 
+  );
   const totalAsientosDisponibles = totalAsientos - totalAsientosOcupados;
 
 
@@ -142,11 +148,26 @@ export default function Dashboard() {
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <button className="modal-close" onClick={cerrarModal}>✖</button>
             <h2>{peliculaSeleccionada.nombre}</h2>
-            <p><strong>Género:</strong> {peliculaSeleccionada.genero}</p>
-            <p><strong>Duración:</strong> {peliculaSeleccionada.duracion} min</p>
-            <p><strong>Clasificación:</strong> {peliculaSeleccionada.clasificacion}</p>
-            <p><strong>Precio:</strong> ${peliculaSeleccionada.precio}</p>
-            <p><strong>Descripción:</strong> {peliculaSeleccionada.descripcion}</p>
+            <div className="modal-info-fila">
+              <div className="modal-datos">
+                <p><strong>Género:</strong> {peliculaSeleccionada.genero}</p>
+                <p><strong>Duración:</strong> {peliculaSeleccionada.duracion} min</p>
+                <p><strong>Clasificación:</strong> {peliculaSeleccionada.clasificacion}</p>
+                <p><strong>Precio:</strong> ${peliculaSeleccionada.precio}</p>
+                <p><strong>Descripción:</strong> {peliculaSeleccionada.descripcion}</p>
+              </div>
+              {peliculaSeleccionada.imagen ? (
+                <img
+                  src={peliculaSeleccionada.imagen}
+                  alt={peliculaSeleccionada.nombre}
+                  className="modal-poster"
+                />
+              ) : (<div className="modal-poster-placeholder">🎬
+              </div>)
+              }
+            </div>
+
+            {/* Tabla de funciones */}
             <table className="tabla-funciones">
               <thead>
                 <tr>
@@ -167,6 +188,13 @@ export default function Dashboard() {
                 })}
               </tbody>
             </table>
+
+            {/* Botón principal de envío con el id*/}
+            <button
+              className="btn-principal"
+              onClick={() => router.push(`/asientos?peliculaId=${peliculaSeleccionada.id}`)
+              }>Reservar Asiento</button>
+
           </div>
         </div>
       )}
