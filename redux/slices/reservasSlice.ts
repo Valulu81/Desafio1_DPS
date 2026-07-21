@@ -1,20 +1,36 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { Asiento } from "@/types/asientos";
-
-interface Reserva {
-    funcionId: string;
-    peliculaId: string;
-    cliente: { nombre: string; correo: string; telefono: string };
-    asientos: Asiento[];
-}
+import { Reserva } from "@/types/reserva";
 
 interface ReservasState {
     lista: Reserva[];
 }
 
 const initialState: ReservasState = {
-    lista: [],
+    lista: [
+        {
+            id: "r1",
+            nombre: "Valeria López",
+            email: "valeria@example.com",
+            pelicula: "Inception",
+            hora: "19:00",
+            boletos: 2,
+            monto: 14.00,
+            sala: "Sala 3"
+        },
+        {
+            id: "r2",
+            nombre: "Carlos Pérez",
+            email: "carlos@example.com",
+            pelicula: "Matrix",
+            hora: "21:30",
+            boletos: 3,
+            monto: 21.00,
+            sala: "Sala 5"
+        }
+    ]
 };
+
 
 const reservasSlice = createSlice({
     name: "reservas",
