@@ -1,0 +1,89 @@
+.ventas-page {
+    max-width: 1400px;
+    margin: auto;
+    padding: 30px;
+}
+
+.ventas-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
+.ventas-header h1 {
+    font-size: 2.2rem;
+    color: #1e293b;
+}
+
+.ventas-header p {
+    color: #64748b;
+    margin-top: 8px;
+}
+
+.tabla-ventas {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.tabla-ventas th {
+    text-align: left;
+    padding: 12px 15px;
+    background: #f5f7fb;
+    color: #64748b;
+    font-size: 0.9rem;
+    border-bottom: 2px solid #e5e7eb;
+}
+
+.tabla-ventas td {
+    padding: 12px 15px;
+    border-bottom: 1px solid #eee;
+}
+
+.reserva-fila:hover {
+    background: #f9fafb;
+}
+
+.tabla-vacia {
+    text-align: center;
+    padding: 30px;
+    color: #999;
+}
+
+.estado-badge {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    user-select: none;
+}
+
+.estado-badge.disponible {
+    background: #dcfce7;
+    color: #16a34a;
+}
+
+.estado-badge.no-disponible {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.acciones {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-editar,
+.btn-eliminar {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.1rem;
+    transition: 0.3s;
+}
+
+.btn-editar:hover,
+.btn-eliminar:hover {
+    transform: scale(1.2);
+}

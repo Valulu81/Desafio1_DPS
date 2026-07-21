@@ -1,0 +1,60 @@
+.footer {
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  color: #e2e8f0;
+  padding: 30px 20px;
+  margin-top: 60px;
+  border-top: 2px solid #9810FA;
+}
+
+.footer-content {
+  max-width: 1400px;
+  margin: 0 auto;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.footer-university {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #9810FA;
+  margin: 0;
+}
+
+.footer-credits {
+  font-size: 0.95rem;
+  color: #cbd5e1;
+  margin: 0;
+}
+
+.footer-credits span {
+  font-weight: 600;
+  color: #e2e8f0;
+}
+
+.footer-year {
+  font-size: 0.85rem;
+  color: #64748b;
+  margin: 0;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .footer {
+    padding: 20px 15px;
+    margin-top: 40px;
+  }
+
+  .footer-university {
+    font-size: 1rem;
+  }
+
+  .footer-credits {
+    font-size: 0.9rem;
+  }
+
+  .footer-year {
+    font-size: 0.8rem;
+  }
+}

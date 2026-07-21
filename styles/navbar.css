@@ -1,0 +1,13 @@
+.navbar {
+    background-color: #4a2398;
+}
+
+.navbar .navbar-brand,
+.navbar .nav-link {
+    color: white !important;
+}
+
+button.navbar-toggler {
+    background-color: white;
+    border: none;
+}

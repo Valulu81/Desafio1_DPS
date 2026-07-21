@@ -1,0 +1,134 @@
+.selector-salas button {
+  min-width: 100px;
+}
+
+.salas-container {
+  background-color: #05020F;
+  min-height: 93.9vh;
+  width: 100%;
+  padding-top: 70px;
+  box-sizing: border-box;
+}
+
+
+.asientos-layout {
+  display: grid;
+  grid-template-columns: 40px auto;
+  background-color: #08041A;
+  padding: 20px;
+  border: 1px solid #460d6ec2;
+  border-radius: 10px;
+  gap: 10px;
+
+}
+
+.contenedor-grande {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  /* ajusta este valor, por defecto Bootstrap mete más separación */
+}
+
+
+.letras-col {
+  display: grid;
+  grid-template-rows: repeat(var(--filas), 40px);
+  /* mismo número de filas */
+  gap: 10px;
+  /* mismo espaciado que los asientos */
+  align-items: center;
+  justify-items: center;
+  color: #fff;
+  font-weight: bold;
+}
+
+.asientos-grid {
+  display: grid;
+  grid-template-columns: repeat(10, 40px);
+  /* 10 asientos por fila */
+  grid-template-rows: repeat(var(--filas), 40px);
+  /* mismo número de filas */
+  gap: 10px;
+  justify-content: center;
+}
+
+.asiento {
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.asiento.libre {
+  background-color: #28272B;
+  color: #fff;
+}
+
+.asiento.ocupado {
+  background-color: #0D0A1A;
+  color: #7d7982;
+}
+
+.leyenda-asientos .cuadro {
+  width: 25px;
+  height: 25px;
+  border-radius: 5px;
+}
+
+.cuadro.libre {
+  background-color: #28272B;
+  /* azul disponible */
+}
+
+.cuadro.seleccionado {
+  background-color: #fff;
+  /* verde seleccionado */
+}
+
+.cuadro.ocupado {
+  background-color: #0D0A1A;
+  border: 1px solid;
+  border-color: #494552;
+}
+
+.sala-btn {
+  background-color: #18181B;
+  color: #a6a5aa;
+}
+
+.sala-btn.active {
+  background-color: #9810FA;
+  color: #fff;
+  border: none;
+}
+
+.card {
+  background-color: #08041A;
+  border-color: #460d6ec2;
+}
+
+@media (min-width: 1440px) {
+  .asientos-layout {
+    width: 50%;
+  }
+
+  .card {
+    width: 30%;
+    padding-top: 6rem;
+  }
+
+  .cartita {
+    margin-top: 3rem;
+  }
+
+  .contyenedor-asientos {
+    width: 70%;
+    margin-right: -15rem;
+    margin-left: -15rem;
+  }
+}
+
+.nombre-pelicula-reserva {
+  font-size: 2.5rem;
+}
