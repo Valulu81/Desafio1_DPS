@@ -1,9 +1,9 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { Asiento } from "@/types/asientos";
-import { Reserva } from "@/types/reserva";
+import { Reservas } from "@/types/reserva";
 
 interface ReservasState {
-    lista: Reserva[];
+    lista: Reservas[];
 }
 
 const initialState: ReservasState = {
@@ -36,7 +36,7 @@ const reservasSlice = createSlice({
     name: "reservas",
     initialState,
     reducers: {
-        agregarReserva: (state, action: PayloadAction<Reserva>) => {
+        agregarReserva: (state, action: PayloadAction<Reservas>) => {
             state.lista.push(action.payload);
         },
     },

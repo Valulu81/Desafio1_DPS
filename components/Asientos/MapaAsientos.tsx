@@ -4,104 +4,186 @@ import { useState, useEffect } from "react";
 import { salas } from "@/data/salas";
 import { Salas } from "@/types/sala";
 import { Asiento } from "@/types/asientos";
-import { useAppSelector } from "@/redux/hooks";
+import { useAppSelector, useAppDispatch } from "@/redux/hooks";
+import { funciones as funcionesData } from "@/data/funciones";
+import { agregarReserva } from "@/redux/slices/reservasSlice";
+import { actualizarAsientos, setFunciones } from "@/redux/slices/funcionesSlice";
 
-//Interface para recoger el id del modal
 interface MapaAsientosProps {
   peliculaId?: string | null;
 }
 
 export default function MapaAsientos({ peliculaId }: MapaAsientosProps) {
+  const dispatch = useAppDispatch();
   
+  // 1. Obtenemos las funciones y películas desde el store de Redux
+  const funcionesRedux = useAppSelector((state) => state.funciones);
   const peliculas = useAppSelector((state) => state.peliculas);
-  const pelicula = peliculas.find(
-    (p) => p.id === Number(peliculaId)
-  );
 
-  const [salaId, setSalaId] = useState<string>(salas[0].id);
-  const sala: Salas | undefined = salas.find((s) => s.id === salaId);
-
-  if (!sala) return <p>Sala no encontrada</p>;
-
-  const filas = Array.from({ length: sala.filas }, (_, i) =>
-    String.fromCharCode(65 + i)
-  );
-
+  const [clienteNombre, setClienteNombre] = useState("");
+  const [clienteEmail, setClienteEmail] = useState("");
+  const [clienteTelefono, setClienteTelefono] = useState("");
+  
+  // Guardamos únicamente el ID de la función seleccionada para evitar desfasajes con Redux
+  const [funcionIdSeleccionada, setFuncionIdSeleccionada] = useState<string | null>(null);
+  const [salaId, setSalaId] = useState<string>(salas[0]?.id ?? "");
   const [asientos, setAsientos] = useState<Asiento[]>([]);
 
-  // 🔑 Regenerar asientos cada vez que cambie la sala
+  // 2. Solo inicializar funciones en Redux SI AÚN NO EXISTEN (evita sobreescribir compras anteriores)
   useEffect(() => {
+    if (!funcionesRedux || funcionesRedux.length === 0) {
+      dispatch(setFunciones(funcionesData));
+    }
+  }, [dispatch, funcionesRedux]);
+
+  const pelicula = peliculas.find((p) => p.id === Number(peliculaId));
+  const sala: Salas | undefined = salas.find((s) => s.id === salaId);
+
+  // Obtener la función actual directamente desde Redux
+  const funcionActual = funcionesRedux.find((f) => f.id === funcionIdSeleccionada);
+
+  // 3. Sincronización inteligente de asientos
+  useEffect(() => {
+    if (!sala) return;
+
+    // Generamos la plantilla de filas según la sala
+    const filas = Array.from({ length: sala.filas }, (_, i) =>
+      String.fromCharCode(65 + i)
+    );
+
+    // CASO A: Si hay una función seleccionada y ya tiene asientos en Redux
+    if (funcionActual && funcionActual.asientos && funcionActual.asientos.length > 0) {
+      setAsientos(funcionActual.asientos);
+      return;
+    }
+
+    // CASO B: Si la función no tiene asientos o no hay función seleccionada todavía,
+    // generamos la matriz base de asientos libres.
     const nuevosAsientos: Asiento[] = filas.flatMap((fila) =>
       Array.from({ length: sala.columnas }).map((_, j) => ({
         id: `${fila}${j + 1}`,
         fila,
         numero: j + 1,
-        estado: "libre",
+        estado: "libre" as const,
       }))
     );
+
     setAsientos(nuevosAsientos);
-  }, [salaId]); // se ejecuta cada vez que cambias de sala
+  }, [funcionIdSeleccionada, funcionActual, sala]);
+
+  if (!sala) return <p className="text-center p-4">Sala no encontrada</p>;
+
+  const filas = Array.from({ length: sala.filas }, (_, i) =>
+    String.fromCharCode(65 + i)
+  );
 
   const toggleSeleccion = (id: string) => {
     setAsientos((prev) =>
-      prev.map((a) =>
-        a.id === id
-          ? {
-            ...a,
-            estado:
-              a.estado === "libre"
-                ? "seleccionado"
-                : a.estado === "seleccionado"
-                  ? "libre"
-                  : a.estado,
-          }
-          : a
-      )
+      prev.map((a) => {
+        if (a.id !== id) return a;
+        if (a.estado === "ocupado") return a; // No permitir cambiar si ya está ocupado
+
+        return {
+          ...a,
+          estado: a.estado === "libre" ? "seleccionado" : "libre",
+        };
+      })
     );
   };
 
   const confirmarReserva = () => {
+    if (!funcionActual) {
+      alert("Por favor selecciona un horario para la función.");
+      return;
+    }
+
+    const seleccionados = asientos.filter((a) => a.estado === "seleccionado");
+    if (seleccionados.length === 0) {
+      alert("Debes seleccionar al menos un asiento.");
+      return;
+    }
+
+    const boletos = seleccionados.length;
+    const monto = boletos * (pelicula?.precio ?? 0);
+    const idsOcupados = seleccionados.map((a) => a.id);
+
+    // 1. Guardar la nueva reserva en el slice de reservas
+    const nuevaReserva = {
+      id: `r${Date.now()}`,
+      nombre: clienteNombre,
+      email: clienteEmail,
+      pelicula: pelicula?.nombre ?? "",
+      hora: funcionActual.hora,
+      boletos,
+      monto,
+      sala: sala?.nombre ?? "",
+    };
+
+    dispatch(agregarReserva(nuevaReserva));
+
+    // 2. Persistir el estado 'ocupado' en el slice de funciones de Redux
+    dispatch(
+      actualizarAsientos({
+        funcionId: funcionActual.id,
+        asientosOcupados: idsOcupados,
+      })
+    );
+
+    // 3. Actualizar el estado visual local
     setAsientos((prev) =>
       prev.map((a) =>
-        a.estado === "seleccionado" ? { ...a, estado: "ocupado" } : a
+        idsOcupados.includes(a.id) ? { ...a, estado: "ocupado" } : a
       )
     );
+
+    alert("¡Reserva confirmada con éxito!");
   };
 
   const totalLibres = asientos.filter((a) => a.estado === "libre").length;
   const totalOcupados = asientos.filter((a) => a.estado === "ocupado").length;
+  
+  // Filtramos las funciones que le corresponden a esta película
+  const funcionesPelicula = funcionesRedux.filter((f) =>
+    pelicula?.funciones?.includes(f.id)
+  );
 
   return (
     <div className="container-fluid text-light p-4 salas-container">
-
-      {/*Para mostrar el nombre de la peli*/}
       {peliculaId && (
         <p className="text-center mb-3">
           <strong className="nombre-pelicula-reserva">{pelicula?.nombre}</strong>
         </p>
       )}
 
-      {/* aqui estan los botones de salas */}
+      {/* Selector de funciones / horarios */}
       <div className="selector-salas mb-3 text-center">
-        {salas.map((s) => (
-          <button
-            key={s.id}
-            className={`btn me-2 sala-btn ${s.id === salaId ? "active" : ""}`}
-            onClick={() => setSalaId(s.id)}
-          >
-            {s.nombre}
-          </button>
-
-        ))}
+        {funcionesPelicula.map((f) => {
+          const salaFuncion = salas.find((s) => s.id === f.salaId);
+          return (
+            <button
+              key={f.id}
+              className={`btn me-2 sala-btn ${
+                funcionIdSeleccionada === f.id ? "active" : ""
+              }`}
+              onClick={() => {
+                setSalaId(f.salaId);
+                setFuncionIdSeleccionada(f.id); // Guardamos solo la ID
+              }}
+            >
+              {salaFuncion?.nombre} - {f.hora}
+            </button>
+          );
+        })}
       </div>
 
       <div className="row justify-content-center align-items-start">
-        {/* Mapa de asientos */}
+        {/* Mapa de Asientos */}
         <div className="col-md-8 d-flex flex-column align-items-center contyenedor-asientos">
           <h3 className="text-center mb-3">{sala.nombre}</h3>
           <button className="btn btn-primary mb-3" style={{ backgroundColor: "#9810FA" }}>
             Pantalla
           </button>
+
           <div className="asientos-layout">
             <div
               className="letras-col"
@@ -116,7 +198,7 @@ export default function MapaAsientos({ peliculaId }: MapaAsientosProps) {
               className="asientos-grid"
               style={{
                 gridTemplateColumns: `repeat(${sala.columnas}, 40px)`,
-                gridTemplateRows: `repeat(${sala.filas}, 40px)`
+                gridTemplateRows: `repeat(${sala.filas}, 40px)`,
               }}
             >
               {asientos.map((asiento) => (
@@ -132,7 +214,8 @@ export default function MapaAsientos({ peliculaId }: MapaAsientosProps) {
               ))}
             </div>
           </div>
-          {/* Estados de los asientos*/}
+
+          {/* Leyenda */}
           <div className="leyenda-asientos my-4 text-center">
             <div className="d-flex justify-content-center gap-4">
               <div className="d-flex align-items-center">
@@ -149,27 +232,53 @@ export default function MapaAsientos({ peliculaId }: MapaAsientosProps) {
               </div>
             </div>
           </div>
-
         </div>
 
-        {/* Resumen lateral */}
-
+        {/* Resumen Lateral */}
         <div className="col-lg-3 col-md-5 cartita">
           <div>
-            <p>{totalLibres} Asientos disponibles </p>
+            <p>{totalLibres} Asientos disponibles</p>
             <p>{totalOcupados} Asientos ocupados</p>
           </div>
-          <div className="card text-light p-3 w-100 ">
-            <h5 className="mb-3">Resumen de seleccion</h5>
-            <p>Asientos seleccionados: <strong>{asientos.filter((a) => a.estado === "seleccionado").length}</strong></p>
-            <p>Precio por boleto: <strong>$100</strong></p>
-            <p>Total a pagar: <strong>${asientos.filter((a) => a.estado === "seleccionado").length * 100}</strong></p>
-            <hr></hr>
-            <div className="mx-5 mb-3">
+          <div className="card text-light p-3 w-100">
+            <h5 className="mb-3">Resumen de selección</h5>
+            <p>
+              Asientos seleccionados:{" "}
+              <strong>
+                {asientos.filter((a) => a.estado === "seleccionado").length}
+              </strong>
+            </p>
+            <p>Precio por boleto: <strong>${pelicula?.precio ?? 0}</strong></p>
+            <p>
+              Total a pagar:{" "}
+              <strong>
+                ${asientos.filter((a) => a.estado === "seleccionado").length * (pelicula?.precio ?? 0)}
+              </strong>
+            </p>
+            <hr />
+            <div className="mx-1 mb-3">
               <p>Ingresar Datos de cliente</p>
-              <input type="text" className="form-control mb-2 " placeholder="Nombre" />
-              <input type="email" className="form-control mb-2" placeholder="Correo electrónico" />
-              <input type="tel" className="form-control mb-2" placeholder="Teléfono" />
+              <input
+                type="text"
+                className="form-control mb-2"
+                placeholder="Nombre"
+                value={clienteNombre}
+                onChange={(e) => setClienteNombre(e.target.value)}
+              />
+              <input
+                type="email"
+                className="form-control mb-2"
+                placeholder="Correo electrónico"
+                value={clienteEmail}
+                onChange={(e) => setClienteEmail(e.target.value)}
+              />
+              <input
+                type="tel"
+                className="form-control mb-2"
+                placeholder="Teléfono"
+                value={clienteTelefono}
+                onChange={(e) => setClienteTelefono(e.target.value)}
+              />
             </div>
             <button className="btn btn-success w-100" onClick={confirmarReserva}>
               Confirmar Reserva

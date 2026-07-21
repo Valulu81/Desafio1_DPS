@@ -4,7 +4,12 @@
 
 .salas-container {
   background-color: #05020F;
+  min-height: 93.9vh;
+  width: 100%;
+  padding-top: 70px;
+  box-sizing: border-box;
 }
+
 
 .asientos-layout {
   display: grid;
