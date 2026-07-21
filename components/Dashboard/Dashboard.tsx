@@ -8,51 +8,40 @@ import { Pelicula } from "@/types/pelicula";
 import { funciones } from "@/data/funciones";
 
 export default function Dashboard() {
-
-  //  pal modal
   const [peliculaSeleccionada, setPeliculaSeleccionada] = useState<Pelicula | null>(null);
-  const abrirModal = (pelicula: Pelicula) => {
-    setPeliculaSeleccionada(pelicula);
-  };
-  const cerrarModal = () => {
-    setPeliculaSeleccionada(null);
-  };
+  const abrirModal = (pelicula: Pelicula) => setPeliculaSeleccionada(pelicula);
+  const cerrarModal = () => setPeliculaSeleccionada(null);
 
+  // Estado global
+  const peliculas = useAppSelector((state) => state.peliculas);
+  const reservas = useAppSelector((state) => state.reservas.lista);
 
-
-  const peliculas = useAppSelector(
-    (state) => state.peliculas
-  );
-
+  // 📊 Métricas
   const totalPeliculas = peliculas.length;
+  const totalFunciones = funciones.length;
 
-  // Pendiente: depende de salasSlice (funciones por sala)
-  const totalFunciones = 0;
+  const totalBoletosVendidos = reservas.reduce((acc, r) => acc + r.boletos, 0);
+  const ingresosGenerados = reservas.reduce((acc, r) => acc + r.monto, 0);
 
-  // Pendiente: depende de reservasSlice
-  const totalBoletosVendidos = 0;
+  // Asientos disponibles/ocupados (ejemplo simple: boletos vendidos = ocupados)
+  const totalAsientosOcupados = totalBoletosVendidos;
+  const totalAsientosDisponibles = 200 - totalAsientosOcupados; // ajusta según tu lógica real
 
-  // Pendiente: depende de salasSlice (asientos por sala)
-  const totalAsientosDisponibles = 0;
-
-  // Pendiente: depende de salasSlice (asientos por sala)
-  const totalAsientosOcupados = 0;
-
-  // Pendiente: depende de reservasSlice
-  const ingresosGenerados = 0;
-
-  // Pendiente: depende de reservasSlice (conteo de reservas por película)
-  const peliculaMasReservada = "—";
+  // Película más reservada
+  const conteoPorPelicula: Record<string, number> = {};
+  reservas.forEach((r) => {
+    conteoPorPelicula[r.pelicula] = (conteoPorPelicula[r.pelicula] || 0) + r.boletos;
+  });
+  const peliculaMasReservada =
+    Object.keys(conteoPorPelicula).length > 0
+      ? Object.entries(conteoPorPelicula).sort((a, b) => b[1] - a[1])[0][0]
+      : "—";
 
   return (
     <div className="dashboard">
-
       <div className="dashboard-header">
         <h1>📊 Dashboard</h1>
-
-        <p>
-          Resumen general del sistema de cine.
-        </p>
+        <p>Resumen general del sistema de cine.</p>
       </div>
 
       <div className="nueva-venta-container">
@@ -61,9 +50,7 @@ export default function Dashboard() {
         </Link>
       </div>
 
-
       <div className="stats-grid">
-
         <div className="stat-card">
           <span>🎬</span>
           <h3>Total películas</h3>
@@ -78,7 +65,7 @@ export default function Dashboard() {
 
         <div className="stat-card">
           <span>🎟️</span>
-          <h3>Boletos vendidos hoy</h3>
+          <h3>Boletos vendidos</h3>
           <p>{totalBoletosVendidos}</p>
         </div>
 
@@ -96,50 +83,35 @@ export default function Dashboard() {
 
         <div className="stat-card">
           <span>💰</span>
-          <h3>Ingresos generados hoy</h3>
-          <p>${ingresosGenerados}</p>
+          <h3>Ingresos generados</h3>
+          <p>${ingresosGenerados.toFixed(2)}</p>
         </div>
 
         <div className="stat-card">
           <span>⭐</span>
-          <h3>Más reservada hoy</h3>
+          <h3>Más reservada</h3>
           <p>{peliculaMasReservada}</p>
         </div>
-
       </div>
 
+      {/* Catálogo de películas */}
       <div className="lista-peliculas-section">
         <h2>🎬 Catálogo de Películas</h2>
-
         {peliculas.length === 0 ? (
-          <p className="lista-vacia">
-            No hay películas registradas.
-          </p>
+          <p className="lista-vacia">No hay películas registradas.</p>
         ) : (
           <div className="lista-peliculas">
             {peliculas.map((pelicula) => (
-              <div
-                key={pelicula.id}
-                className="lista-pelicula-item"
-              >
+              <div key={pelicula.id} className="lista-pelicula-item">
                 {pelicula.imagen ? (
-                  <img
-                    src={pelicula.imagen}
-                    alt={pelicula.nombre}
-                    className="lista-poster"
-                  />
+                  <img src={pelicula.imagen} alt={pelicula.nombre} className="lista-poster" />
                 ) : (
-                  <div className="lista-poster-placeholder">
-                    🎬
-                  </div>
+                  <div className="lista-poster-placeholder">🎬</div>
                 )}
-
                 <div className="lista-info">
                   <h4>{pelicula.nombre}</h4>
                   <p>{pelicula.genero} · {pelicula.duracion} min</p>
-
                 </div>
-
                 <span
                   className={
                     pelicula.estado === "Disponible"
@@ -149,42 +121,37 @@ export default function Dashboard() {
                 >
                   {pelicula.estado}
                 </span>
-                <button className="btn button btn-warning btn-rounded" onClick={() => abrirModal(pelicula)}>Ver funciones</button>
-
+                <button className="btn btn-warning btn-rounded" onClick={() => abrirModal(pelicula)}>
+                  Ver funciones
+                </button>
               </div>
             ))}
           </div>
         )}
       </div>
-      {/* AQUI TA EL MODAL DE DETALLES */}
+
+      {/* Modal de detalles */}
       {peliculaSeleccionada && (
         <div className="modal-overlay" onClick={cerrarModal}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <button className="modal-close" onClick={cerrarModal}>✖</button>
-
-            {/* Encabezado */}
             <h2>{peliculaSeleccionada.nombre}</h2>
             <p><strong>Género:</strong> {peliculaSeleccionada.genero}</p>
             <p><strong>Duración:</strong> {peliculaSeleccionada.duracion} min</p>
-            <p><strong>Clasificacion:</strong> {peliculaSeleccionada.clasificacion}</p>
-            <p><strong>Precio:</strong> {peliculaSeleccionada.precio} min</p>
-            <p><strong>Descripción:</strong> {peliculaSeleccionada.descripcion} min</p>
-
-            {/* Tabla de funciones */}
+            <p><strong>Clasificación:</strong> {peliculaSeleccionada.clasificacion}</p>
+            <p><strong>Precio:</strong> ${peliculaSeleccionada.precio}</p>
+            <p><strong>Descripción:</strong> {peliculaSeleccionada.descripcion}</p>
             <table className="tabla-funciones">
               <thead>
                 <tr>
-                  <th>Funcion</th>
+                  <th>Función</th>
                   <th>Hora</th>
                 </tr>
               </thead>
               <tbody>
                 {peliculaSeleccionada.funciones?.map((fid) => {
-                  // Buscar la función completa en el arreglo global "funciones"
                   const funcion = funciones.find((f) => f.id === fid);
-                  if (!funcion) {
-                    return null;
-                  }
+                  if (!funcion) return null;
                   return (
                     <tr key={funcion.id}>
                       <td>{funcion.id}</td>
@@ -194,13 +161,9 @@ export default function Dashboard() {
                 })}
               </tbody>
             </table>
-
-            {/* Botón principal */}
-            <button className="btn-principal">Reservar Asiento</button>
           </div>
         </div>
       )}
-
     </div>
   );
 }
