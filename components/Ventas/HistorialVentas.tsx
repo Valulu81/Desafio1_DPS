@@ -1,6 +1,5 @@
 "use client"
 import '@/styles/ventas.css';
-import { Reserva } from '@/types/reserva';
 import VentasFila from './ventasFila';
 import { RootState } from '@/redux/store';
 import { useSelector } from 'react-redux';
